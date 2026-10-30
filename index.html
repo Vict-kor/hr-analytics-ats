@@ -1,0 +1,1483 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HR-аналитика как основа внутренней ATS</title>
+  <style>
+    :root {
+      --ink: #0b0d10;
+      --text: #23272f;
+      --muted: #667085;
+      --line: #d0d5dd;
+      --panel: #f2f4f7;
+      --paper: #ffffff;
+      --accent: #ff5a1f;
+      --green: #087443;
+      --blue: #175cd3;
+      --red: #b42318;
+      --shadow: 0 24px 70px rgba(16, 24, 40, .10);
+      --radius: 8px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
+      background: var(--paper);
+      color: var(--text);
+      letter-spacing: 0;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    button, input { font: inherit; }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 14px 32px;
+      border-bottom: 1px solid rgba(208, 213, 221, .75);
+      background: rgba(255, 255, 255, .92);
+      backdrop-filter: blur(14px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 220px;
+      font-weight: 800;
+      color: var(--ink);
+    }
+
+    .brand-mark {
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      background: var(--ink);
+      color: #fff;
+      border-radius: 6px;
+      font-size: 13px;
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .nav::-webkit-scrollbar { display: none; }
+    .nav a {
+      padding: 9px 12px;
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .nav a.active,
+    .nav a:hover {
+      background: var(--ink);
+      color: #fff;
+    }
+
+    main { overflow: hidden; }
+    section {
+      max-width: none;
+      width: 100%;
+      margin: 0 auto;
+      padding: 86px clamp(42px, 6vw, 96px);
+    }
+
+    .hero {
+      max-width: none;
+      width: 100%;
+      min-height: min(820px, calc(100vh - 58px));
+      display: grid;
+      grid-template-columns: minmax(520px, 1.05fr) minmax(560px, .95fr);
+      gap: clamp(48px, 6vw, 104px);
+      align-items: center;
+      padding: 46px clamp(42px, 6vw, 96px) 62px;
+    }
+
+    .hero-copy {
+      max-width: 820px;
+    }
+
+    .eyebrow {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+    h1 {
+      margin-bottom: 26px;
+      color: var(--ink);
+      font-size: clamp(46px, 5.8vw, 76px);
+      line-height: 1.02;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      margin-bottom: 28px;
+      max-width: none;
+      color: var(--ink);
+      font-size: clamp(34px, 4.4vw, 58px);
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    h3 {
+      margin-bottom: 12px;
+      color: var(--ink);
+      font-size: 24px;
+      line-height: 1.2;
+    }
+
+    .lead {
+      max-width: 1120px;
+      margin-bottom: 34px;
+      color: #344054;
+      font-size: 22px;
+      line-height: 1.45;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .btn {
+      border: 1px solid var(--ink);
+      border-radius: 999px;
+      padding: 13px 18px;
+      background: var(--ink);
+      color: #fff;
+      cursor: pointer;
+      font-weight: 750;
+    }
+
+    .btn.secondary {
+      background: #fff;
+      color: var(--ink);
+    }
+
+    .hero-board {
+      min-height: 520px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      grid-template-rows: minmax(178px, auto) minmax(150px, auto) minmax(128px, auto);
+      gap: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background:
+        linear-gradient(90deg, rgba(208,213,221,.55) 1px, transparent 1px),
+        linear-gradient(rgba(208,213,221,.55) 1px, transparent 1px),
+        #fff;
+      background-size: 72px 72px;
+      box-shadow: var(--shadow);
+      padding: 22px;
+    }
+
+    .dashboard-tile {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, .94);
+      padding: 22px;
+      box-shadow: 0 12px 28px rgba(16, 24, 40, .08);
+      overflow: hidden;
+    }
+
+    .tile-large { grid-column: 1 / -1; }
+    .tile-source { grid-column: 1; }
+    .tile-risk { grid-column: 2; }
+    .tile-actions { grid-column: 1 / -1; background: var(--ink); color: #fff; }
+
+    .tile-label {
+      margin-bottom: 12px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .tile-actions .tile-label { color: rgba(255,255,255,.62); }
+    .metric-big {
+      color: var(--ink);
+      font-size: clamp(30px, 3.4vw, 48px);
+      font-weight: 850;
+      line-height: 1.06;
+      overflow-wrap: normal;
+      word-break: normal;
+    }
+
+    .tile-source .metric-big,
+    .tile-risk .metric-big {
+      font-size: clamp(25px, 2.5vw, 34px);
+    }
+
+    .tile-actions .metric-big { color: #fff; font-size: clamp(24px, 2.35vw, 30px); }
+    .tile-copy {
+      margin: 12px 0 0;
+      max-width: 36ch;
+      color: #475467;
+      line-height: 1.42;
+      font-size: 15px;
+    }
+    .tile-actions .tile-copy { color: rgba(255,255,255,.78); }
+
+    .split {
+      display: grid;
+      grid-template-columns: .9fr 1.1fr;
+      gap: 42px;
+      align-items: start;
+    }
+
+    .callout {
+      border-left: 5px solid var(--accent);
+      padding: 18px 0 18px 24px;
+      font-size: 26px;
+      line-height: 1.32;
+      color: var(--ink);
+      font-weight: 800;
+    }
+
+    .checks {
+      display: grid;
+      gap: 12px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .checks li {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+      font-size: 19px;
+      line-height: 1.35;
+    }
+
+    .checks li::before {
+      content: "";
+      flex: 0 0 10px;
+      width: 10px;
+      height: 10px;
+      margin-top: 8px;
+      background: var(--ink);
+    }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .tab {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 10px 16px;
+      background: #fff;
+      color: var(--muted);
+      cursor: pointer;
+      font-weight: 750;
+    }
+
+    .tab.active {
+      border-color: var(--ink);
+      background: var(--ink);
+      color: #fff;
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    .metric-panel {
+      min-height: 245px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      padding: 22px;
+    }
+
+    .metric-panel strong {
+      display: block;
+      margin-bottom: 16px;
+      color: var(--ink);
+      font-size: 24px;
+    }
+
+    .metric-panel ul {
+      margin: 0;
+      padding-left: 18px;
+      color: #344054;
+      line-height: 1.55;
+      font-size: 17px;
+    }
+
+    .all-metrics-wrap {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: visible;
+      background: #fff;
+    }
+
+    .metrics-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 15px;
+    }
+
+    .metrics-table th,
+    .metrics-table td {
+      padding: 15px 16px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .metrics-table th {
+      background: var(--ink);
+      color: #fff;
+      font-size: 13px;
+      text-transform: uppercase;
+    }
+
+    .metrics-table tr:last-child td { border-bottom: 0; }
+    .metrics-table td:first-child {
+      width: 190px;
+      color: var(--ink);
+      font-weight: 850;
+    }
+
+    .metric-chip {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      margin: 4px 6px 4px 0;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 8px 11px;
+      background: var(--panel);
+      color: var(--ink);
+      cursor: help;
+      font-weight: 750;
+      outline: none;
+    }
+
+    .metric-chip::after {
+      content: attr(data-definition);
+      position: absolute;
+      left: 50%;
+      bottom: calc(100% + 10px);
+      z-index: 20;
+      width: min(300px, 78vw);
+      transform: translateX(-50%) translateY(4px);
+      border: 1px solid var(--ink);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      background: var(--ink);
+      color: #fff;
+      box-shadow: 0 16px 44px rgba(16, 24, 40, .18);
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 1.35;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .15s ease, transform .15s ease;
+    }
+
+    .metric-chip::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: calc(100% + 4px);
+      z-index: 21;
+      width: 10px;
+      height: 10px;
+      transform: translateX(-50%) rotate(45deg);
+      background: var(--ink);
+      opacity: 0;
+      transition: opacity .15s ease;
+    }
+
+    .metric-chip:hover::after,
+    .metric-chip:focus::after,
+    .metric-chip:hover::before,
+    .metric-chip:focus::before {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .metric-chip:hover::before,
+    .metric-chip:focus::before {
+      transform: translateX(-50%) rotate(45deg);
+    }
+
+    .funnel-wrap {
+      display: grid;
+      grid-template-columns: minmax(280px, .8fr) minmax(0, 1.2fr);
+      gap: 38px;
+      align-items: stretch;
+    }
+
+    .funnel {
+      display: grid;
+      gap: 10px;
+    }
+
+    .funnel-step {
+      position: relative;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: transform .18s ease, border-color .18s ease, background .18s ease;
+    }
+
+    .funnel-step:hover,
+    .funnel-step.active {
+      border-color: var(--ink);
+      background: var(--ink);
+      color: #fff;
+      transform: translateX(4px);
+    }
+
+    .funnel-step span {
+      display: block;
+      color: inherit;
+      font-size: 13px;
+      opacity: .65;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .funnel-output {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 28px;
+      background: var(--panel);
+    }
+
+    .bar-row {
+      display: grid;
+      grid-template-columns: 125px 1fr 46px;
+      gap: 12px;
+      align-items: center;
+      margin: 12px 0;
+      font-size: 15px;
+    }
+
+    .bar-track {
+      height: 16px;
+      background: #e4e7ec;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      width: var(--value);
+      background: var(--ink);
+      border-radius: inherit;
+    }
+
+    .table-tools {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      font-size: 16px;
+    }
+
+    .data-table th, .data-table td {
+      padding: 15px 16px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .data-table th {
+      background: var(--ink);
+      color: #fff;
+      font-size: 14px;
+      text-transform: uppercase;
+    }
+
+    .data-table tr:last-child td { border-bottom: 0; }
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .status.ready { background: #dcfae6; color: var(--green); }
+    .status.partial { background: #fef0c7; color: #93370d; }
+    .status.none { background: #fee4e2; color: var(--red); }
+
+    .quick-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 14px;
+    }
+
+    .quick-card {
+      min-height: 235px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 20px;
+      background: #fff;
+    }
+
+    .quick-card b {
+      display: block;
+      margin-bottom: 14px;
+      color: var(--accent);
+      font-size: 20px;
+    }
+
+    .tool-flow {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+    }
+
+    .flow-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 28px;
+      background: var(--panel);
+    }
+
+    .flow {
+      display: grid;
+      gap: 12px;
+      margin-top: 22px;
+    }
+
+    .flow span {
+      display: block;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 14px;
+      background: #fff;
+      text-align: center;
+      font-weight: 800;
+      color: var(--ink);
+    }
+
+    .solution-table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: #fff;
+      font-size: 15px;
+    }
+
+    .solution-table th,
+    .solution-table td {
+      padding: 16px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+      line-height: 1.42;
+    }
+
+    .solution-table th {
+      background: var(--ink);
+      color: #fff;
+      font-size: 13px;
+      text-transform: uppercase;
+    }
+
+    .solution-table tr:last-child td { border-bottom: 0; }
+    .solution-table td:first-child {
+      min-width: 190px;
+      color: var(--ink);
+      font-weight: 850;
+    }
+
+    .solution-examples {
+      color: #344054;
+      font-size: 14px;
+    }
+
+    .availability {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 5px 10px;
+      white-space: nowrap;
+      font-size: 13px;
+      font-weight: 850;
+    }
+
+    .availability.high { background: #dcfae6; color: var(--green); }
+    .availability.medium { background: #fef0c7; color: #93370d; }
+    .availability.low { background: #fee4e2; color: var(--red); }
+
+    .solution-note {
+      margin-top: 16px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .calc {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 34px;
+      align-items: stretch;
+    }
+
+    .controls {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 24px;
+      background: #fff;
+    }
+
+    .control {
+      margin-bottom: 24px;
+    }
+
+    .control label {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+      color: var(--ink);
+      font-weight: 800;
+    }
+
+    input[type="range"] { width: 100%; accent-color: var(--ink); }
+
+    .insight-board {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .insight {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 24px;
+      background: var(--panel);
+    }
+
+    .insight strong {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--ink);
+      font-size: 42px;
+      line-height: 1;
+    }
+
+    .hypothesis-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+
+    .hypothesis {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px;
+      background: #fff;
+      min-height: 160px;
+    }
+
+    .hypothesis span {
+      display: block;
+      margin-bottom: 14px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 850;
+      text-transform: uppercase;
+    }
+
+    .roadmap {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      counter-reset: horizon;
+    }
+
+    .road-card {
+      position: relative;
+      min-height: 360px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 28px;
+      background: var(--panel);
+    }
+
+    .road-card::before {
+      counter-increment: horizon;
+      content: "0" counter(horizon);
+      position: absolute;
+      right: 24px;
+      top: 22px;
+      color: var(--muted);
+      font-weight: 850;
+    }
+
+    .road-card ul { padding-left: 18px; line-height: 1.58; }
+
+    .role-switch {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+      align-items: start;
+    }
+
+    .role-panel {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 30px;
+      background: #fff;
+    }
+
+    .role-panel.after {
+      background: var(--ink);
+      color: #fff;
+    }
+
+    .role-panel.after h3 { color: #fff; }
+    .role-panel ul { margin-bottom: 0; padding-left: 20px; font-size: 22px; line-height: 1.65; }
+
+    .backlog-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+
+    .backlog-col {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 24px;
+      background: var(--panel);
+    }
+
+    .backlog-item {
+      margin: 12px 0;
+      padding: 12px;
+      border-left: 4px solid var(--ink);
+      background: #fff;
+      line-height: 1.35;
+    }
+
+    .footer-note {
+      width: 100%;
+      margin: 0 auto;
+      padding: 28px clamp(42px, 6vw, 96px);
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    @media (max-width: 1180px) {
+      .hero {
+        grid-template-columns: minmax(0, 1fr) minmax(430px, 520px);
+        gap: 42px;
+        padding-left: 34px;
+        padding-right: 34px;
+      }
+    }
+
+    @media (max-width: 980px) {
+      .topbar { align-items: flex-start; flex-direction: column; padding: 12px 18px; }
+      section { padding: 66px 18px; }
+      .hero, .split, .funnel-wrap, .calc, .tool-flow, .role-switch { grid-template-columns: 1fr; }
+      .hero { min-height: auto; gap: 34px; padding: 56px 22px 66px; }
+      .hero-board {
+        min-height: 480px;
+        grid-template-rows: minmax(160px, auto) minmax(140px, auto) minmax(120px, auto);
+      }
+      .metric-grid, .quick-grid, .hypothesis-grid, .roadmap, .backlog-grid, .insight-board { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 640px) {
+      .metric-grid, .quick-grid, .hypothesis-grid, .roadmap, .backlog-grid, .insight-board { grid-template-columns: 1fr; }
+      .hero-board { grid-template-columns: 1fr; grid-template-rows: none; gap: 14px; min-height: auto; padding: 18px; }
+      .tile-large, .tile-source, .tile-risk, .tile-actions { grid-column: 1; }
+      .dashboard-tile { min-height: 128px; padding: 18px; }
+      .all-metrics-wrap { overflow-x: auto; }
+      .metrics-table { min-width: 720px; }
+      .solution-table { min-width: 960px; }
+      #solutions { overflow-x: auto; }
+      .data-table { font-size: 14px; }
+      .data-table th, .data-table td { padding: 12px 10px; }
+      .bar-row { grid-template-columns: 95px 1fr 40px; }
+      h1 { font-size: 42px; }
+      .lead { font-size: 19px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#hero" aria-label="К началу страницы">
+      <span class="brand-mark">HR</span>
+      <span>HR Analytics ATS</span>
+    </a>
+    <nav class="nav" aria-label="Навигация по странице">
+      <a href="#why">Зачем</a>
+      <a href="#metrics">Метрики</a>
+      <a href="#all-metrics">Справочник</a>
+      <a href="#funnel">Воронка</a>
+      <a href="#readiness">Готовность</a>
+      <a href="#automation">Автоматизация</a>
+      <a href="#solutions">Решения</a>
+      <a href="#roadmap">Roadmap</a>
+      <a href="#ats">ATS</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero" id="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">Интерактивный доклад</p>
+        <h1>HR-аналитика как основа внутренней ATS</h1>
+        <p class="lead">Не просто закрывать вакансии, а понимать, почему процесс работает именно так: где теряются кандидаты, какие этапы тормозят найм и какие решения улучшают качество.</p>
+        <div class="hero-actions">
+          <a class="btn" href="#funnel">Посмотреть воронку</a>
+          <a class="btn secondary" href="#ats">Перейти к бэклогу ATS</a>
+        </div>
+      </div>
+      <aside class="hero-board" aria-label="Пример HR dashboard">
+        <div class="dashboard-tile tile-large">
+          <div class="tile-label">Активная вакансия</div>
+          <div class="metric-big">57 дней</div>
+          <p class="tile-copy">конверсия 8%, лучший источник Telegram, на техническом этапе теряется 60%</p>
+        </div>
+        <div class="dashboard-tile tile-source">
+          <div class="tile-label">Источник</div>
+          <div class="metric-big">Telegram</div>
+          <p class="tile-copy">дает больше релевантных кандидатов</p>
+        </div>
+        <div class="dashboard-tile tile-risk">
+          <div class="tile-label">Риск</div>
+          <div class="metric-big">Tech</div>
+          <p class="tile-copy">узкое место процесса</p>
+        </div>
+        <div class="dashboard-tile tile-actions">
+          <div class="tile-label">Следующий вопрос</div>
+          <div class="metric-big">Что меняем в процессе?</div>
+          <p class="tile-copy">аналитика должна приводить к гипотезе, проверке и действию</p>
+        </div>
+      </aside>
+    </section>
+
+    <section id="why">
+      <div class="split">
+        <div>
+          <p class="eyebrow">Зачем</p>
+          <h2>HR-решения слишком часто держатся на ощущениях</h2>
+          <p class="callout">Аналитика переводит HR от отдельных кейсов к управлению процессом на основании данных.</p>
+        </div>
+        <ul class="checks">
+          <li>Понимать, где теряются кандидаты.</li>
+          <li>Находить узкие места процесса.</li>
+          <li>Прогнозировать проблемы до срыва сроков.</li>
+          <li>Проверять гипотезы, а не спорить ощущениями.</li>
+          <li>Принимать решения быстрее и прозрачнее.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="metrics">
+      <p class="eyebrow">Логика метрик</p>
+      <h2>Метрики полезнее смотреть по этапам работы HR</h2>
+      <div class="tabs" role="tablist" aria-label="Группы HR-метрик">
+        <button class="tab active" data-metric="hire">Найм</button>
+        <button class="tab" data-metric="probation">Испытательный срок</button>
+        <button class="tab" data-metric="team">Работа команды</button>
+        <button class="tab" data-metric="recruiting">Рекрутинг</button>
+      </div>
+      <div class="metric-grid" id="metricGrid"></div>
+    </section>
+
+    <section id="all-metrics">
+      <p class="eyebrow">Справочник</p>
+      <h2>Основные HR-метрики в одном месте</h2>
+      <p class="lead">Наведи курсор на метрику, чтобы увидеть короткое определение. Таблица собрана вокруг найма, адаптации, испытательного срока и работы команды.</p>
+      <div class="all-metrics-wrap">
+        <table class="metrics-table">
+          <thead>
+            <tr>
+              <th>Блок</th>
+              <th>Метрики</th>
+              <th>Для чего смотреть</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Воронка найма</td>
+              <td>
+                <span class="metric-chip" tabindex="0" data-definition="Доля кандидатов, которые переходят с одного этапа воронки на следующий.">Conversion Rate</span>
+                <span class="metric-chip" tabindex="0" data-definition="Доля кандидатов, потерянных на конкретном этапе процесса.">Drop Rate</span>
+                <span class="metric-chip" tabindex="0" data-definition="Количество кандидатов на каждом этапе найма в выбранный момент.">Pipeline Volume</span>
+                <span class="metric-chip" tabindex="0" data-definition="Доля кандидатов, дошедших до финального успешного результата найма.">Funnel Yield</span>
+                <span class="metric-chip" tabindex="0" data-definition="Сколько дней вакансия находится в открытом статусе.">Vacancy Aging</span>
+                <span class="metric-chip" tabindex="0" data-definition="Доля открытых вакансий, закрытых в согласованный срок.">SLA Compliance</span>
+              </td>
+              <td>Понять, где именно процесс теряет кандидатов и какой этап требует внимания.</td>
+            </tr>
+            <tr>
+              <td>Скорость найма</td>
+              <td>
+                <span class="metric-chip" tabindex="0" data-definition="Время от появления кандидата в процессе до принятого оффера.">Time to Hire</span>
+                <span class="metric-chip" tabindex="0" data-definition="Время от открытия вакансии до ее фактического закрытия.">Time to Fill</span>
+                <span class="metric-chip" tabindex="0" data-definition="Сколько кандидат или вакансия находятся на конкретном этапе.">Time in Stage</span>
+                <span class="metric-chip" tabindex="0" data-definition="Среднее время, за которое руководитель или интервьюер дает обратную связь.">Feedback Time</span>
+              </td>
+              <td>Найти задержки, из-за которых вакансия зависает или кандидат остывает.</td>
+            </tr>
+            <tr>
+              <td>Офферы</td>
+              <td>
+                <span class="metric-chip" tabindex="0" data-definition="Доля принятых офферов от всех сделанных офферов.">Offer Acceptance Rate</span>
+                <span class="metric-chip" tabindex="0" data-definition="Доля кандидатов, которые отказались после получения оффера.">Offer Decline Rate</span>
+                <span class="metric-chip" tabindex="0" data-definition="Причины, по которым кандидат не принимает оффер.">Offer Decline Reasons</span>
+                <span class="metric-chip" tabindex="0" data-definition="Доля кандидатов, которые вышли на работу после принятого оффера.">Start Rate</span>
+              </td>
+              <td>Понять, где предложение компании проигрывает ожиданиям кандидата или рынку.</td>
+            </tr>
+            <tr>
+              <td>Источники</td>
+              <td>
+                <span class="metric-chip" tabindex="0" data-definition="Эффективность канала по количеству и качеству кандидатов.">Source Effectiveness</span>
+                <span class="metric-chip" tabindex="0" data-definition="Доля релевантных кандидатов, пришедших из конкретного источника.">Source Quality</span>
+                <span class="metric-chip" tabindex="0" data-definition="Стоимость найма одного сотрудника с учетом каналов и затрат.">Cost per Hire</span>
+                <span class="metric-chip" tabindex="0" data-definition="Соотношение затрат на источник и полученного результата.">Channel ROI</span>
+                <span class="metric-chip" tabindex="0" data-definition="Доля сотрудников, успешно прошедших испытательный срок, по каждому источнику.">Quality by Source</span>
+              </td>
+              <td>Сравнить HH, Telegram, рекомендации и другие каналы не по шуму, а по результату.</td>
+            </tr>
+            <tr>
+              <td>Эффективность HR</td>
+              <td>
+                <span class="metric-chip" tabindex="0" data-definition="Отдача от HR-инвестиций: какой бизнес-результат получен относительно затрат на HR-процессы.">ROI</span>
+                <span class="metric-chip" tabindex="0" data-definition="Суммарные расходы на HR в пересчете на одного сотрудника.">HR Cost per Employee</span>
+                <span class="metric-chip" tabindex="0" data-definition="Выручка компании в пересчете на одного сотрудника.">Revenue per Employee</span>
+                <span class="metric-chip" tabindex="0" data-definition="Прибыль компании в пересчете на одного сотрудника.">Profit per Employee</span>
+                <span class="metric-chip" tabindex="0" data-definition="Экономия от автоматизации, сокращения ручной работы или ускорения процессов.">HR Savings</span>
+              </td>
+              <td>Понять, окупаются ли HR-процессы и где автоматизация дает измеримый эффект.</td>
+            </tr>
+            <tr>
+              <td>Рекрутинг</td>
+              <td>
+                <span class="metric-chip" tabindex="0" data-definition="Количество активных вакансий и кандидатов на одного рекрутера.">Recruiter Workload</span>
+                <span class="metric-chip" tabindex="0" data-definition="Количество закрытых вакансий за выбранный период.">Closed Vacancies</span>
+                <span class="metric-chip" tabindex="0" data-definition="Количество проведенных интервью за период.">Interview Volume</span>
+                <span class="metric-chip" tabindex="0" data-definition="Конверсия кандидатов по каждому рекрутеру.">Recruiter Conversion</span>
+                <span class="metric-chip" tabindex="0" data-definition="Оценка качества взаимодействия кандидата с компанией в процессе найма.">Candidate Experience</span>
+                <span class="metric-chip" tabindex="0" data-definition="Оценка удовлетворенности нанимающего руководителя работой рекрутинга.">Hiring Manager Satisfaction</span>
+              </td>
+              <td>Видеть нагрузку, скорость и качество работы рекрутинга без ручных отчетов.</td>
+            </tr>
+            <tr>
+              <td>Испытательный срок</td>
+              <td>
+                <span class="metric-chip" tabindex="0" data-definition="Доля сотрудников, успешно завершивших испытательный срок.">Probation Pass Rate</span>
+                <span class="metric-chip" tabindex="0" data-definition="Доля случаев, когда испытательный срок продлили.">Probation Extension Rate</span>
+                <span class="metric-chip" tabindex="0" data-definition="Доля сотрудников, не прошедших испытательный срок.">Probation Fail Rate</span>
+                <span class="metric-chip" tabindex="0" data-definition="Сколько времени прошло до первого merge request новичка.">Time to First MR</span>
+                <span class="metric-chip" tabindex="0" data-definition="Сколько времени прошло до первого релиза с участием новичка.">Time to First Release</span>
+              </td>
+              <td>Связать качество найма с реальным результатом после выхода сотрудника.</td>
+            </tr>
+            <tr>
+              <td>Адаптация</td>
+              <td>
+                <span class="metric-chip" tabindex="0" data-definition="Сколько времени нужно новичку до самостоятельного выполнения задачи.">Time to Productivity</span>
+                <span class="metric-chip" tabindex="0" data-definition="Доля новичков, которые выполнили ключевые шаги адаптации.">Onboarding Completion</span>
+                <span class="metric-chip" tabindex="0" data-definition="Оценка успешности наставника по результатам новичков.">Mentor Effectiveness</span>
+                <span class="metric-chip" tabindex="0" data-definition="Сколько времени проходит до первого содержательного ревью.">Time to First Review</span>
+              </td>
+              <td>Понять, какие наставники, команды и процессы быстрее доводят новичка до результата.</td>
+            </tr>
+            <tr>
+              <td>Команда</td>
+              <td>
+                <span class="metric-chip" tabindex="0" data-definition="Доля сотрудников, которые ушли за выбранный период.">Turnover Rate</span>
+                <span class="metric-chip" tabindex="0" data-definition="Доля сотрудников, которые остались в компании за выбранный период.">Retention Rate</span>
+                <span class="metric-chip" tabindex="0" data-definition="Доля сотрудников, ушедших в первые месяцы после выхода.">Early Turnover</span>
+                <span class="metric-chip" tabindex="0" data-definition="Средний срок работы сотрудника в компании или команде.">Employee Tenure</span>
+                <span class="metric-chip" tabindex="0" data-definition="Индекс готовности сотрудников рекомендовать компанию как место работы.">eNPS</span>
+                <span class="metric-chip" tabindex="0" data-definition="Доля рабочего времени, потерянного из-за отсутствий сотрудников.">Absenteeism Rate</span>
+                <span class="metric-chip" tabindex="0" data-definition="Причины, по которым сотрудники покидают компанию.">Exit Reasons</span>
+                <span class="metric-chip" tabindex="0" data-definition="Количество и доля переходов сотрудников внутри компании.">Internal Mobility</span>
+              </td>
+              <td>Видеть удержание, риски ухода и движение людей внутри компании.</td>
+            </tr>
+            <tr>
+              <td>Качество найма</td>
+              <td>
+                <span class="metric-chip" tabindex="0" data-definition="Итоговая оценка того, насколько нанятый сотрудник оказался успешным после выхода.">Quality of Hire</span>
+                <span class="metric-chip" tabindex="0" data-definition="Доля новых сотрудников, которые достигают ожидаемой производительности.">New Hire Performance</span>
+                <span class="metric-chip" tabindex="0" data-definition="Доля новых сотрудников, которые остаются в компании после испытательного срока или другого контрольного периода.">New Hire Retention</span>
+                <span class="metric-chip" tabindex="0" data-definition="Связь между оценкой на интервью и реальным результатом сотрудника после выхода.">Interview Predictive Validity</span>
+              </td>
+              <td>Проверить, приводит ли процесс найма к сильным сотрудникам, а не только к закрытым вакансиям.</td>
+            </tr>
+            <tr>
+              <td>Качество данных</td>
+              <td>
+                <span class="metric-chip" tabindex="0" data-definition="Доля карточек, где заполнены обязательные поля.">Data Completeness</span>
+                <span class="metric-chip" tabindex="0" data-definition="Доля карточек, где статусы и причины заполнены по единому справочнику.">Status Consistency</span>
+                <span class="metric-chip" tabindex="0" data-definition="Сколько записей не обновлялись дольше допустимого срока.">Stale Records</span>
+                <span class="metric-chip" tabindex="0" data-definition="Доля событий, которые синхронизировались из внешних систем без ручного ввода.">Sync Coverage</span>
+              </td>
+              <td>Проверить, можно ли доверять аналитике и строить на ней решения.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="funnel">
+      <p class="eyebrow">Найм</p>
+      <h2>Воронка показывает, где кандидаты превращаются в потери</h2>
+      <div class="funnel-wrap">
+        <div class="funnel" id="funnelSteps"></div>
+        <div class="funnel-output">
+          <h3 id="funnelTitle">Отклики</h3>
+          <p id="funnelText">Это вход в процесс: важно понимать, какие источники дают не просто много откликов, а релевантных кандидатов.</p>
+          <div id="funnelBars" aria-label="Пример распределения кандидатов по этапам"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="readiness">
+      <p class="eyebrow">Приоритеты</p>
+      <h2>Часть метрик уже доступна, часть требует стандартизации</h2>
+      <div class="table-tools">
+        <button class="tab active" data-filter="all">Все</button>
+        <button class="tab" data-filter="ready">Уже можем</button>
+        <button class="tab" data-filter="partial">Частично</button>
+        <button class="tab" data-filter="none">Нужно создать</button>
+      </div>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Метрика</th>
+            <th>Готовность</th>
+            <th>Что доработать</th>
+          </tr>
+        </thead>
+        <tbody id="readinessRows"></tbody>
+      </table>
+    </section>
+
+    <section id="quick">
+      <p class="eyebrow">Без разработки</p>
+      <h2>Первые улучшения можно сделать уже сейчас</h2>
+      <div class="quick-grid">
+        <article class="quick-card"><b>1. Причины отказов</b><p>Заменить свободный текст dropdown-справочником: зарплата, стек, soft skills, не вышел на связь, переезд, контроффер.</p></article>
+        <article class="quick-card"><b>2. Причины увольнений</b><p>Ввести обязательное поле и единый список причин, чтобы видеть повторяющиеся проблемы.</p></article>
+        <article class="quick-card"><b>3. Итоги ИС</b><p>Отмечать результат: прошел отлично, с замечаниями, продление, не прошел.</p></article>
+        <article class="quick-card"><b>4. Карточки</b><p>Заполнять карточки одинаково, чтобы данные можно было сравнивать между вакансиями.</p></article>
+        <article class="quick-card"><b>5. Статусы</b><p>Единые статусы вакансий и кандидатов делают аналитику технически возможной.</p></article>
+      </div>
+    </section>
+
+    <section id="tools">
+      <p class="eyebrow">Инструменты</p>
+      <h2>Можно идти через BI-стек или через легкий прототип</h2>
+      <div class="tool-flow">
+        <article class="flow-card">
+          <h3>BI-модель</h3>
+          <p>Подходит, когда нужен управленческий контур и регулярные отчеты.</p>
+          <div class="flow"><span>HH</span><span>YouTrack</span><span>Google Calendar</span><span>HR Dashboard</span><span>Power BI / Metabase / Grafana</span></div>
+        </article>
+        <article class="flow-card">
+          <h3>Быстрый прототип</h3>
+          <p>Подходит, чтобы быстро проверить гипотезы на текущих данных.</p>
+          <div class="flow"><span>Python</span><span>SQLite</span><span>Dashboard</span></div>
+        </article>
+      </div>
+    </section>
+
+    <section id="solutions">
+      <p class="eyebrow">Решения</p>
+      <h2>Для аналитики найма и всего HR есть несколько рабочих классов решений</h2>
+      <p class="lead">Выбор зависит от цели: закрыть аналитику подбора, собрать полный HR-контур или быстро сделать управленческий дашборд поверх текущих источников.</p>
+      <table class="solution-table">
+        <thead>
+          <tr>
+            <th>Класс решения</th>
+            <th>Примеры</th>
+            <th>Плюсы</th>
+            <th>Минусы</th>
+            <th>Доступность в России</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Российские ATS для найма</td>
+            <td class="solution-examples">Huntflow, Potok, Talantix, Skillaz, E-Staff, FriendWork, Контур.Воронка</td>
+            <td>Быстро закрывают воронку, статусы, источники, вакансии, коммуникации и базовую аналитику подбора. Обычно проще интегрируются с российскими job-площадками.</td>
+            <td>Чаще сильны именно в рекрутинге, а не во всем HR-цикле. Метрики ИС, наставников и удержания могут требовать доработок или BI-слоя.</td>
+            <td><span class="availability high">Высокая</span></td>
+          </tr>
+          <tr>
+            <td>HRM/HCM для всего HR</td>
+            <td class="solution-examples">1C:ЗУП и расширения, БОСС-Кадровик, Mirapolis HCM, Websoft HCM, корпоративные HR-порталы</td>
+            <td>Подходят для кадрового контура, оргструктуры, адаптации, обучения, оценки, отпусков и истории сотрудника.</td>
+            <td>Внедрение дольше и дороже. Аналитика найма может быть менее гибкой, чем в специализированной ATS.</td>
+            <td><span class="availability high">Высокая</span></td>
+          </tr>
+          <tr>
+            <td>BI поверх HR-данных</td>
+            <td class="solution-examples">Yandex DataLens, Visiology, PIX BI, Форсайт, Loginom, Metabase, Grafana</td>
+            <td>Можно объединить HH, YouTrack, календарь, ATS, HRM и Excel в один управленческий слой. Максимальная гибкость по метрикам и фильтрам.</td>
+            <td>BI не заменяет источник данных. Нужны выгрузки, модель данных, регулярное обновление и владелец качества данных.</td>
+            <td><span class="availability high">Высокая</span></td>
+          </tr>
+          <tr>
+            <td>Кастомный контур аналитики</td>
+            <td class="solution-examples">Python + PostgreSQL/SQLite + API/выгрузки + DataLens/Metabase/Grafana</td>
+            <td>Самый гибкий путь: можно начать с MVP, быстро проверить гипотезы и собрать ровно те метрики, которые нужны компании.</td>
+            <td>Потребуется поддержка разработки, документация, мониторинг интеграций и ответственность за корректность расчетов.</td>
+            <td><span class="availability high">Высокая</span></td>
+          </tr>
+          <tr>
+            <td>Международные ATS</td>
+            <td class="solution-examples">Greenhouse, Lever, SmartRecruiters, Workable</td>
+            <td>Зрелые продукты с сильной воронкой, интеграциями, отчетами, candidate experience и best practices для глобального найма.</td>
+            <td>Для России высокие риски по оплате, поддержке, юридическим условиям, хранению данных и локальным интеграциям.</td>
+            <td><span class="availability low">Ограничена</span></td>
+          </tr>
+          <tr>
+            <td>Международные HCM</td>
+            <td class="solution-examples">Workday, SAP SuccessFactors, Oracle HCM, BambooHR, HiBob, Personio</td>
+            <td>Сильный полный HR-контур: оргструктура, performance, compensation, обучение, таланты, глобальная отчетность.</td>
+            <td>Дорогие и тяжелые внедрения. В российском контексте есть риски новых продаж, поддержки, оплаты, локализации и хранения данных.</td>
+            <td><span class="availability low">Ограничена</span></td>
+          </tr>
+          <tr>
+            <td>Западные BI-платформы</td>
+            <td class="solution-examples">Power BI, Tableau, Looker</td>
+            <td>Очень зрелая визуализация, моделирование данных, экосистема коннекторов и аналитические практики.</td>
+            <td>Для новых внедрений в России есть риски доступности лицензий, оплаты, поддержки и облачных сервисов. Нужен план замены.</td>
+            <td><span class="availability low">Ограничена</span></td>
+          </tr>
+          <tr>
+            <td>Сервисная аналитика и консалтинг</td>
+            <td class="solution-examples">RPO-провайдеры, HR-консалтинг, внешние аналитические команды</td>
+            <td>Можно быстро получить экспертизу, аудит воронки, benchmark и помощь с постановкой метрик.</td>
+            <td>Не заменяет внутреннюю систему данных. После проекта знания и расчеты нужно закрепить внутри компании.</td>
+            <td><span class="availability medium">Средняя</span></td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="solution-note">Практичный вывод: для вашей задачи наиболее реалистичен гибрид. ATS закрывает операционный найм, BI или кастомный слой собирает сквозную аналитику, а HRM/HCM подключается там, где нужны данные по сотрудникам, адаптации и удержанию.</p>
+    </section>
+
+    <section id="automation">
+      <p class="eyebrow">Автоматизация</p>
+      <h2>В одном месте HR видит не факты, а объяснение процесса</h2>
+      <div class="calc">
+        <div class="controls">
+          <div class="control">
+            <label for="days">Дней вакансия открыта <span id="daysLabel">57</span></label>
+            <input id="days" type="range" min="10" max="120" value="57" />
+          </div>
+          <div class="control">
+            <label for="conversion">Конверсия в выход <span id="conversionLabel">8%</span></label>
+            <input id="conversion" type="range" min="2" max="35" value="8" />
+          </div>
+          <div class="control">
+            <label for="drop">Потери на техэтапе <span id="dropLabel">60%</span></label>
+            <input id="drop" type="range" min="10" max="85" value="60" />
+          </div>
+        </div>
+        <div class="insight-board">
+          <article class="insight"><strong id="riskLevel">Высокий</strong><span>риск срыва срока закрытия</span></article>
+          <article class="insight"><strong id="qualityLevel">Низкая</strong><span>эффективность воронки</span></article>
+          <article class="insight"><strong id="focusArea">Техэтап</strong><span>главная зона для проверки гипотезы</span></article>
+        </div>
+      </div>
+    </section>
+
+    <section id="hypotheses">
+      <p class="eyebrow">Гипотезы</p>
+      <h2>Продуктовое мышление начинается с проверяемых предположений</h2>
+      <div class="hypothesis-grid">
+        <article class="hypothesis"><span>Гипотеза 1</span>Конверсия QA падает из-за названия вакансии.</article>
+        <article class="hypothesis"><span>Гипотеза 2</span>Слишком долго назначаются технические интервью.</article>
+        <article class="hypothesis"><span>Гипотеза 3</span>Определенный источник дает больше успешных сотрудников.</article>
+        <article class="hypothesis"><span>Гипотеза 4</span>Некоторые наставники лучше адаптируют новичков.</article>
+        <article class="hypothesis"><span>Гипотеза 5</span>После изменения анкеты HH выросла конверсия.</article>
+        <article class="hypothesis"><span>Гипотеза 6</span>Определенный руководитель дольше принимает решения.</article>
+        <article class="hypothesis"><span>Гипотеза 7</span>Самые успешные кандидаты проходят HR быстрее.</article>
+        <article class="hypothesis"><span>Гипотеза 8</span>Часть вакансий зависает на согласовании.</article>
+      </div>
+    </section>
+
+    <section id="roadmap">
+      <p class="eyebrow">Roadmap</p>
+      <h2>Развитие аналитики лучше вести в три горизонта</h2>
+      <div class="roadmap">
+        <article class="road-card">
+          <h3>Сейчас: 1-2 месяца</h3>
+          <ul><li>стандартизировать статусы</li><li>причины отказов и увольнений</li><li>обязательные поля</li><li>дашборд по воронке</li><li>выгрузка из YouTrack и интеграция HH</li></ul>
+        </article>
+        <article class="road-card">
+          <h3>Среднесрочно: 3-6 месяцев</h3>
+          <ul><li>единая карточка кандидата</li><li>история изменений</li><li>автоматические отчеты</li><li>метрики ИС</li><li>метрики наставников</li></ul>
+        </article>
+        <article class="road-card">
+          <h3>Долгосрочно: 6-12 месяцев</h3>
+          <ul><li>вероятность закрытия вакансии</li><li>вероятность прохождения ИС</li><li>вероятность принятия оффера</li><li>поиск факторов успеха</li><li>автоматические рекомендации HR</li></ul>
+        </article>
+      </div>
+    </section>
+
+    <section id="role">
+      <p class="eyebrow">Как изменится работа HR</p>
+      <h2>Аналитика переводит HR из исполнителя в владельца процесса</h2>
+      <div class="role-switch">
+        <article class="role-panel">
+          <h3>Сегодня</h3>
+          <ul><li>HR ищет</li><li>HR проводит интервью</li><li>HR закрывает вакансию</li></ul>
+        </article>
+        <article class="role-panel after">
+          <h3>После внедрения аналитики</h3>
+          <ul><li>HR проверяет гипотезы</li><li>HR прогнозирует риски</li><li>HR понимает узкие места</li><li>HR влияет на процесс</li><li>HR принимает решения на основе данных</li></ul>
+        </article>
+      </div>
+    </section>
+
+    <section id="ats">
+      <p class="eyebrow">ТЗ для внутренней ATS</p>
+      <h2>ATS должна стать источником данных для постоянного улучшения HR</h2>
+      <div class="backlog-grid">
+        <article class="backlog-col">
+          <h3>MVP</h3>
+          <div class="backlog-item">Единая карточка кандидата с полной историей.</div>
+          <div class="backlog-item">Стандартизированные статусы вакансий и кандидатов.</div>
+          <div class="backlog-item">Справочники причин отказов, увольнений и непрохождения ИС.</div>
+          <div class="backlog-item">Автоматический расчет воронки, конверсий и Time in Stage.</div>
+          <div class="backlog-item">Интеграция с HH и YouTrack.</div>
+        </article>
+        <article class="backlog-col">
+          <h3>Средний приоритет</h3>
+          <div class="backlog-item">Аналитика по рекрутерам.</div>
+          <div class="backlog-item">Аналитика по руководителям.</div>
+          <div class="backlog-item">Аналитика по наставникам и испытательному сроку.</div>
+          <div class="backlog-item">История изменений карточек кандидатов.</div>
+          <div class="backlog-item">Автоматические еженедельные отчеты.</div>
+        </article>
+        <article class="backlog-col">
+          <h3>Дальше</h3>
+          <div class="backlog-item">Предиктивная аналитика.</div>
+          <div class="backlog-item">Автоматическое выявление аномалий.</div>
+          <div class="backlog-item">Система рекомендаций HR.</div>
+          <div class="backlog-item">BI-панель с фильтрами по отделам, стекам, городам, источникам и периодам.</div>
+        </article>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer-note">Локальная интерактивная страница по материалам доклада об HR-аналитике и внутренней ATS.</footer>
+
+  <script>
+    const metricData = {
+      hire: [
+        ["Воронка", ["просмотры вакансии", "отклики", "релевантные", "HR интервью", "технические", "офферы", "выход"]],
+        ["Конверсии", ["Conversion Rate каждого этапа", "Drop Rate", "Offer Acceptance Rate"]],
+        ["Скорость", ["Time in Stage", "Time to Hire", "Time to Fill"]],
+        ["Источники", ["Source Effectiveness", "стоимость и качество канала", "релевантность кандидатов"]]
+      ],
+      probation: [
+        ["Прохождение ИС", ["успешно прошли", "продлили", "перевели", "уволены"]],
+        ["Срезы", ["по отделам", "по наставникам", "по руководителям", "по стеку"]],
+        ["Причины", ["увольнения", "непрохождение ИС", "продление"]],
+        ["Время до результата", ["первый MR", "релиз", "самостоятельная задача", "ревью"]]
+      ],
+      team: [
+        ["Стабильность", ["текучесть", "срок работы сотрудников"]],
+        ["Вовлеченность", ["eNPS", "динамика по командам"]],
+        ["Движение", ["внутренние переходы", "смена ролей"]],
+        ["Причины", ["причины увольнений", "повторяющиеся паттерны"]]
+      ],
+      recruiting: [
+        ["Нагрузка", ["количество вакансий", "активные кандидаты"]],
+        ["Скорость", ["интервью", "офферы", "закрытия"]],
+        ["Качество", ["конверсии по рекрутеру", "принятые офферы"]],
+        ["Фокус", ["узкие места", "перераспределение задач"]]
+      ]
+    };
+
+    const funnelData = [
+      ["Просмотры", 100, "Верх воронки показывает, насколько вакансия видима и понятна аудитории."],
+      ["Отклики", 72, "Важно понимать, какие источники дают не просто много откликов, а релевантных кандидатов."],
+      ["Релевантные", 48, "На этом этапе видно качество описания вакансии и точность источников."],
+      ["HR интервью", 34, "Здесь проверяется скорость реакции HR и качество первичного отбора."],
+      ["Технические", 22, "Если потери здесь высокие, нужно смотреть ожидания, стек, назначение интервью и обратную связь."],
+      ["Офферы", 13, "Оффер показывает, насколько процесс доводит сильных кандидатов до решения."],
+      ["Выход", 9, "Выход отражает не только рекрутинг, но и ожидания кандидата после оффера."],
+      ["Прохождение ИС", 7, "Финальная ценность найма видна после испытательного срока, а не в момент подписания оффера."]
+    ];
+
+    const readiness = [
+      ["Конверсия", "ready", "Уже можно считать по переходам между статусами."],
+      ["Time to Hire", "ready", "Уже можно считать от входа кандидата до принятия оффера."],
+      ["Источник кандидатов", "ready", "Уже есть в HH и может связываться с карточкой."],
+      ["Скорость прохождения этапов", "ready", "Уже можно считать при единых статусах."],
+      ["Причины отказов", "partial", "Нужно стандартизировать справочник причин."],
+      ["Причины увольнений", "partial", "Нужно обязательное заполнение."],
+      ["Наставничество", "none", "Нужно добавить модель данных и связь с новичком."],
+      ["Испытательный срок", "partial", "Нужна автоматизация статусов и итогов ИС."],
+      ["Нагрузка HR", "partial", "Нужна автоматическая агрегация по рекрутерам."]
+    ];
+
+    const statusText = {
+      ready: "Уже можем",
+      partial: "Частично",
+      none: "Нужно создать"
+    };
+
+    function renderMetrics(key) {
+      const grid = document.querySelector("#metricGrid");
+      grid.innerHTML = metricData[key].map(([title, items]) => `
+        <article class="metric-panel">
+          <strong>${title}</strong>
+          <ul>${items.map(item => `<li>${item}</li>`).join("")}</ul>
+        </article>
+      `).join("");
+    }
+
+    function renderFunnel(activeIndex = 1) {
+      const steps = document.querySelector("#funnelSteps");
+      steps.innerHTML = funnelData.map(([name, value], index) => `
+        <button class="funnel-step ${index === activeIndex ? "active" : ""}" data-index="${index}">
+          <span>${value}% от входа</span>${name}
+        </button>
+      `).join("");
+      updateFunnel(activeIndex);
+    }
+
+    function updateFunnel(index) {
+      const [name, , text] = funnelData[index];
+      document.querySelector("#funnelTitle").textContent = name;
+      document.querySelector("#funnelText").textContent = text;
+      document.querySelectorAll(".funnel-step").forEach((step, i) => step.classList.toggle("active", i === index));
+      document.querySelector("#funnelBars").innerHTML = funnelData.map(([label, value]) => `
+        <div class="bar-row">
+          <span>${label}</span>
+          <div class="bar-track"><div class="bar-fill" style="--value:${value}%"></div></div>
+          <b>${value}</b>
+        </div>
+      `).join("");
+    }
+
+    function renderReadiness(filter = "all") {
+      const rows = readiness
+        .filter(([, status]) => filter === "all" || status === filter)
+        .map(([name, status, action]) => `
+          <tr>
+            <td><strong>${name}</strong></td>
+            <td><span class="status ${status}">${statusText[status]}</span></td>
+            <td>${action}</td>
+          </tr>
+        `).join("");
+      document.querySelector("#readinessRows").innerHTML = rows;
+    }
+
+    function updateCalculator() {
+      const days = Number(document.querySelector("#days").value);
+      const conversion = Number(document.querySelector("#conversion").value);
+      const drop = Number(document.querySelector("#drop").value);
+      document.querySelector("#daysLabel").textContent = days;
+      document.querySelector("#conversionLabel").textContent = `${conversion}%`;
+      document.querySelector("#dropLabel").textContent = `${drop}%`;
+      document.querySelector("#riskLevel").textContent = days > 70 ? "Критичный" : days > 45 ? "Высокий" : "Умеренный";
+      document.querySelector("#qualityLevel").textContent = conversion < 10 ? "Низкая" : conversion < 22 ? "Средняя" : "Сильная";
+      document.querySelector("#focusArea").textContent = drop > 50 ? "Техэтап" : drop > 28 ? "HR этап" : "Источники";
+    }
+
+    document.querySelectorAll("[data-metric]").forEach(button => {
+      button.addEventListener("click", () => {
+        document.querySelectorAll("[data-metric]").forEach(item => item.classList.remove("active"));
+        button.classList.add("active");
+        renderMetrics(button.dataset.metric);
+      });
+    });
+
+    document.querySelector("#funnelSteps").addEventListener("click", event => {
+      const step = event.target.closest(".funnel-step");
+      if (step) updateFunnel(Number(step.dataset.index));
+    });
+
+    document.querySelectorAll("[data-filter]").forEach(button => {
+      button.addEventListener("click", () => {
+        document.querySelectorAll("[data-filter]").forEach(item => item.classList.remove("active"));
+        button.classList.add("active");
+        renderReadiness(button.dataset.filter);
+      });
+    });
+
+    document.querySelectorAll("input[type='range']").forEach(input => input.addEventListener("input", updateCalculator));
+
+    const sections = [...document.querySelectorAll("main section[id]")];
+    const navLinks = [...document.querySelectorAll(".nav a")];
+    const observer = new IntersectionObserver(entries => {
+      const visible = entries.filter(entry => entry.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+      if (!visible) return;
+      navLinks.forEach(link => link.classList.toggle("active", link.getAttribute("href") === `#${visible.target.id}`));
+    }, { rootMargin: "-20% 0px -65% 0px", threshold: [.1, .25, .5] });
+    sections.forEach(section => observer.observe(section));
+
+    renderMetrics("hire");
+    renderFunnel(1);
+    renderReadiness();
+    updateCalculator();
+  </script>
+</body>
+</html>
